@@ -1,0 +1,71 @@
+Project Title: Doctor Appointment Booking & Patient File Management System
+
+
+Document Version: 1.0.0
+
+Classification: Technical Architecture & Specifications
+
+1. System Overview
+The Doctor Appointment Booking & Patient File Management System is an enterprise-grade, cloud-ready healthcare application designed to optimize clinical workflows, manage Electronic Health Records (EHR), and automate patient-doctor scheduling. The platform operates on a Three-Tier Architecture model to enforce clean separation of concerns, high scalability, and robust security protocols required for handling sensitive medical data.
+
+2. Architectural Blueprint
+The system is split into three decoupled operational layers:
+
+2.1. Presentation Layer (Frontend)
+Technology Stack: React.js, JavaScript (ES6+), HTML5, CSS3.
+
+Core Responsibilities: * Renders responsive user interfaces for Patients, Doctors, and Administrators.
+
+Manages client-side state using state hooks to accurately display real-time availability without explicit page reloads.
+
+Handles asynchronous HTTP/HTTPS processing to communicate with backend APIs.
+
+2.2. Application Layer (Backend Engine)
+Technology Stack: Django (Python) / Node.js framework.
+
+Core Responsibilities:
+
+Exposes secure RESTful API endpoints for data exchange.
+
+Executes core business logic (e.g., verifying booking slot availability, calculating schedule conflicts).
+
+Implements secure, token-based authentication (JSON Web Tokens / JWT) and manages user sessions.
+
+2.3. Data Storage Layer (Database)
+Technology Stack: Relational Database Management System (PostgreSQL / MySQL / SQLite).
+
+Core Responsibilities:
+
+Maintains ACID-compliant structured data tables.
+
+Preserves relational integrity between entities (Patients, Doctors, Appointments, MedicalRecords) using Primary Key (PK) and Foreign Key (FK) constraints.
+
+3. Entity-Relationship Data Model (Schema)
+The structural integrity of the system relies on structured relational mapping to map data records correctly across domains:
+
+Entity Name	Key Attributes	Core Relationships
+User / Profile	UserID (PK), Email, PasswordHash, Role	Base entity for authentication.
+Patient Profile	PatientID (PK), UserID (FK), DOB, BloodGroup	Maps 1:1 with User; 1:Many with Appointments & EHR.
+Doctor Profile	DoctorID (PK), UserID (FK), Specialization, Availability	Maps 1:1 with User; 1:Many with Appointments & EHR.
+Appointment	ApptID (PK), PatientID (FK), DoctorID (FK), DateTime, Status	Connects exactly one Patient to one Doctor for a slot.
+Medical Record	RecordID (PK), PatientID (FK), DoctorID (FK), Diagnosis, Prescription	Permanent medical file ledger entry.
+4. End-to-End Operational Workflow
+The sequence below outlines the transaction flow when a user interacts with the system:
+
+[ Patient Interface ] ──(1. GET /api/slots/)──> [ Backend Server ] ──(2. Read Available)─> [ Relational DB ]
+                                                        │                                         │
+[ Patient Interface ] <──(4. Return Confirmation)──────┼──(3. Write Appointment Status) <────────┘
+Authentication & Entry: A user authenticates via the login portal. The Application Layer verifies credentials against cryptographically hashed records and issues an encrypted token payload defining user privileges (Patient or Doctor).
+
+Availability Evaluation: The patient queries available slots. The system executes a lookup query against the database filtering out blocked timestamps, returning an array of available time windows.
+
+Transactional Booking: The user selects a slot and clicks "Book". The application initiates a database transaction to insert a new row into the Appointment ledger and marks the schedule unit as reserved.
+
+Clinical Record Processing: During the scheduled hour, the authenticated Doctor calls the specific patient’s RecordID. The server returns historical data payloads. Upon conclusion, the doctor commits diagnosis statements and digital e-prescriptions back into the secure database.
+
+5. Security & Compliance Controls
+Due to the sensitive nature of Electronic Health Records, the platform implements strict infrastructure guardrails:
+
+Role-Based Access Control (RBAC): Restricts data operations based on user profiles. Patients are strictly blocked from editing scheduling slots or viewing separate user records. Doctors are blocked from administrative configurations.
+
+Data Safeguarding: Restricts traffic exclusively over secure HTTPS channels. Sensitive credential entities utilize secure cryptographic hashing parameters (e.g., PBKDF2 or bcrypt algorithms) prior to storage write-ins.
